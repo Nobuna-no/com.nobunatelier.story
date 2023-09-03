@@ -1,0 +1,19 @@
+{
+    "name": "NobunAtelier.Story.Editor",
+    "rootNamespace": "NobunAtelier.Story",
+    "references": [
+        "GUID:a004be4738d6de14d9da903a31981b64",
+        "GUID:1a5a52bc4781bf843b72cbf090f4c2dd"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

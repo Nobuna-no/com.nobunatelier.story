@@ -1,0 +1,18 @@
+{
+    "name": "NobunAtelier.Story.Runtime",
+    "rootNamespace": "NobunAtelier.Story",
+    "references": [
+        "GUID:35d37775fe401ce46ae761273fc212a3",
+        "GUID:c911ff518c14c2448885986062ccbbdc",
+        "GUID:776d03a35f1b52c4a9aed9f56d7b4229"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

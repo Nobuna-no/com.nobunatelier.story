@@ -1,0 +1,15 @@
+{
+  "name": "com.nobunatelier.story",
+  "displayName": "NobunAtelier - Story",
+  "version": "0.1.0",
+  "unity": "2022.3",
+  "description": "Ink Integration for NobunAtelier",
+  "author": {
+    "name": "Morgan Hoarau",
+    "email": "morgansb.hoarau@gmail.com",
+    "url": "https://github.com/Nobuna-no"
+  },
+  "dependencies": {
+    "com.nobunatelier.core": "0.1.0"
+  }
+}
