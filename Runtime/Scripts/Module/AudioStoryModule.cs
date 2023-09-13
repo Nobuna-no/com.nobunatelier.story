@@ -1,5 +1,6 @@
 using Ink.Runtime;
 using NobunAtelier;
+using System.Collections.Generic;
 using System.ComponentModel;
 using UnityEngine;
 
@@ -11,6 +12,9 @@ public class AudioStoryModule : StoryManagerModuleBase
     private StoryAudioCollection m_audioCollection;
 
     [SerializeField]
+    private string m_delayAudioFunctionName = "DelayAudio";
+
+    [SerializeField]
     private string m_playAudioFunctionName = "PlaySound";
 
     [SerializeField]
@@ -19,6 +23,8 @@ public class AudioStoryModule : StoryManagerModuleBase
     [SerializeField]
     private string m_stopAudioWitFadeOutFunctionName = "StopMusic";
 
+    private Queue<System.Action> m_CommandBuffer = new Queue<System.Action>();
+
     public override void InitModule(StoryManager moduleOwner)
     {
         base.InitModule(moduleOwner);
@@ -26,59 +32,105 @@ public class AudioStoryModule : StoryManagerModuleBase
 
     public override void StoryStart(Story story, string knot)
     {
-        if (story.TryGetExternalFunction(m_playAudioFunctionName, out var ext1))
+        story.BindExternalFunction(m_playAudioFunctionName, (string name) =>
         {
-            story.BindExternalFunction(m_playAudioFunctionName, (string name) =>
+            if (m_logDebug)
             {
-                if (m_logDebug)
-                {
-                    Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{m_playAudioFunctionName}({name})' triggered.");
-                }
-                PlaySound(name);
-            });
-        }
+                Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{m_playAudioFunctionName}({name})' triggered.");
+            }
+            m_CommandBuffer.Enqueue(() => { PlaySound(name); });
+        });
 
-        if (story.TryGetExternalFunction(m_playAudioWithFadeInFunctionName, out var ext2))
+        story.BindExternalFunction(m_playAudioWithFadeInFunctionName, (string name) =>
         {
-            story.BindExternalFunction(m_playAudioWithFadeInFunctionName, (string name) =>
+            if (m_logDebug)
             {
-                if (m_logDebug)
-                {
-                    Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{m_playAudioWithFadeInFunctionName}({name})' triggered.");
-                }
-                PlayMusic(name);
-            });
-        }
+                Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{m_playAudioWithFadeInFunctionName}({name})' triggered.");
+            }
+            m_CommandBuffer.Enqueue(() => { PlayMusic(name); });
+        });
 
-        if (story.TryGetExternalFunction(m_stopAudioWitFadeOutFunctionName, out var ext3))
+        story.BindExternalFunction(m_stopAudioWitFadeOutFunctionName, (string name) =>
         {
-            story.BindExternalFunction(m_stopAudioWitFadeOutFunctionName, (string name) =>
+            if (m_logDebug)
             {
-                if (m_logDebug)
-                {
-                    Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{m_stopAudioWitFadeOutFunctionName}({name})' triggered.");
-                }
-                StopMusic(name);
-            });
-        }
+                Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{m_stopAudioWitFadeOutFunctionName}({name})' triggered.");
+            }
+            m_CommandBuffer.Enqueue(() => { StopMusic(name); });
+        });
+
+        story.BindExternalFunction(m_delayAudioFunctionName, (string duration) =>
+        {
+            if (m_logDebug)
+            {
+                Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{m_delayAudioFunctionName}({duration})' triggered.");
+            }
+
+            float durationInSecond = 0;
+            try
+            {
+                durationInSecond = float.Parse(duration);
+            }
+            catch { }
+
+            m_CommandBuffer.Enqueue(() => { DelayAudio(durationInSecond); });
+        });
+
+        this.enabled = true;
     }
 
     public override void StoryEnd(Story story)
     {
-        if (story.TryGetExternalFunction(m_playAudioFunctionName, out var ext1))
+        story.UnbindExternalFunction(m_playAudioFunctionName);
+        story.UnbindExternalFunction(m_playAudioWithFadeInFunctionName);
+        story.UnbindExternalFunction(m_stopAudioWitFadeOutFunctionName);
+        story.UnbindExternalFunction(m_delayAudioFunctionName);
+
+        m_CommandBuffer.Clear();
+        this.enabled = false;
+    }
+
+    private bool m_isPaused = false;
+    private float m_pauseRemainingDuration = 0;
+
+    private void FixedUpdate()
+    {
+        if (!m_isPaused && m_CommandBuffer.Count == 0)
         {
-            story.UnbindExternalFunction(m_playAudioFunctionName);
+            return;
         }
 
-        if (story.TryGetExternalFunction(m_playAudioWithFadeInFunctionName, out var ext2))
+        if (m_isPaused)
         {
-            story.UnbindExternalFunction(m_playAudioWithFadeInFunctionName);
+            m_pauseRemainingDuration -= Time.fixedDeltaTime;
+            if (m_pauseRemainingDuration <= 0)
+            {
+                m_isPaused = false;
+            }
+            else
+            {
+                return;
+            }
         }
 
-        if (story.TryGetExternalFunction(m_stopAudioWitFadeOutFunctionName, out var ext3))
+        if (m_CommandBuffer.Count > 0)
         {
-            story.UnbindExternalFunction(m_stopAudioWitFadeOutFunctionName);
+            for (int i = 0; i < m_CommandBuffer.Count; i++)
+            {
+                m_CommandBuffer.Dequeue()?.Invoke();
+                // if a DelayAudio is call, we stop the dequeue here.
+                if (m_isPaused)
+                {
+                    return;
+                }
+            }
         }
+    }
+
+    private void DelayAudio(float duration)
+    {
+        m_pauseRemainingDuration = duration;
+        m_isPaused = true;
     }
 
     private void PlaySound(string Id)
