@@ -3,6 +3,11 @@ using NaughtyAttributes;
 using System.Collections;
 using UnityEngine;
 
+/// <summary>
+/// EXTERNAL System_StoryPlay(nodeName)
+/// EXTERNAL System_DelayCommands(duration)
+/// </summary>
+
 public class StoryManager : SingletonManager<StoryManager>
 {
     private const string storyStateName = "StoryState";
@@ -10,6 +15,9 @@ public class StoryManager : SingletonManager<StoryManager>
     [Header("Story Manager")]
     [SerializeField]
     private TextAsset inkAsset;
+
+    [SerializeField, Tooltip("Set to false in case you want to manually handle the display of the first line of a node.")]
+    private bool m_displayFirstLineOnStoryStart = true;
 
     private Story m_inkStory;
 
@@ -22,6 +30,9 @@ public class StoryManager : SingletonManager<StoryManager>
 
     [SerializeField]
     private float m_skippingDelayBetweenLineInSeconds = 0.2f;
+
+    [SerializeField]
+    private string m_delayCommandsCommandName = "System_DelayCommands";
 
     public delegate void OnStoryEndStateDelegate();
 
@@ -82,21 +93,23 @@ public class StoryManager : SingletonManager<StoryManager>
             Debug.LogError($"[{this.name}]<{this.GetType().Name}>: Story started but no module running!");
         }
 
-        DisplayNextLine();
+        BindCommand(m_delayCommandsCommandName, (float duration) =>
+        {
+            foreach (var module in m_modules)
+            {
+                if (module.IsRunning)
+                {
+                    module.AddDelayCommand(duration);
+                }
+            }
+        });
+
+        if (m_displayFirstLineOnStoryStart)
+        {
+            DisplayNextLine();
+        }
+
         return true;
-    }
-
-    public void Load()
-    {
-        string stateJson = PlayerPrefs.GetString(storyStateName, null);
-        if (stateJson != null && stateJson != "")
-            m_inkStory.state.LoadJson(stateJson);
-    }
-
-    public void Save()
-    {
-        string stateJson = m_inkStory.state.ToJson();
-        PlayerPrefs.SetString(storyStateName, stateJson);
     }
 
     public void DisplayNextLine()
@@ -116,6 +129,8 @@ public class StoryManager : SingletonManager<StoryManager>
                 m_modules[i].StoryEnd(m_inkStory);
             }
 
+            UnbindCommand(m_delayCommandsCommandName);
+
             m_skipEnabled = false;
             m_isStoryTelling = false;
             OnStoryEnded?.Invoke();
@@ -124,13 +139,26 @@ public class StoryManager : SingletonManager<StoryManager>
 
         for (int i = m_modules.Length - 1; i >= 0; --i)
         {
-            if (!m_modules[i].IsRunning)
+            if (!m_modules[i].IsRunning || !m_modules[i].ShouldUpdate)
             {
                 continue;
             }
 
             m_modules[i].StoryUpdate(text, m_inkStory.currentTags);
         }
+    }
+
+    public void Load()
+    {
+        string stateJson = PlayerPrefs.GetString(storyStateName, null);
+        if (stateJson != null && stateJson != "")
+            m_inkStory.state.LoadJson(stateJson);
+    }
+
+    public void Save()
+    {
+        string stateJson = m_inkStory.state.ToJson();
+        PlayerPrefs.SetString(storyStateName, stateJson);
     }
 
     public void Skip()
@@ -177,6 +205,19 @@ public class StoryManager : SingletonManager<StoryManager>
 
         // We've reached the end or a choice
         return false;
+    }
+
+    private void BindCommand<A>(string commandName, System.Action<A> callback)
+    {
+        m_inkStory.BindExternalFunction(commandName, (A arg1) =>
+        {
+            callback?.Invoke(arg1);
+        });
+    }
+
+    private void UnbindCommand(string commandName)
+    {
+        m_inkStory.UnbindExternalFunction(commandName);
     }
 
 #if UNITY_EDITOR
