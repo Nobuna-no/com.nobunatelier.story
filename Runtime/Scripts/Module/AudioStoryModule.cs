@@ -11,69 +11,74 @@ using UnityEngine;
 /// EXTERNAL Audio_MusicStop(musicName)
 /// </summary>
 
-[DisplayName("Story Module: Audio")]
-public class AudioStoryModule : StoryManagerModuleBase
+namespace NobunAtelier.Story
 {
-    public override bool ShouldUpdate => false;
 
-    [Header("Audio")]
-    [SerializeField]
-    private StoryAudioCollection m_audioCollection;
-
-    [SerializeField]
-    private string m_soundEffectPlayCommandName = "Audio_SoundEffectPlay";
-
-    [SerializeField]
-    private string m_musicPlayCommandName = "Audio_MusicPlay";
-
-    [SerializeField]
-    private string m_musicStopCommandName = "Audio_MusicStop";
-
-    public override void InitModule(StoryManager moduleOwner)
+    [DisplayName("Story Module: Audio")]
+    public class AudioStoryModule : StoryManagerModuleWithDelay
     {
-        base.InitModule(moduleOwner);
-    }
+        public override bool ShouldUpdate => false;
 
-    public override void StoryStart(Story story, string knot)
-    {
-        base.StoryStart(story, knot);
-        BindCommand(story, m_soundEffectPlayCommandName, (string name) => { PlaySound(name); });
-        BindCommand(story, m_musicPlayCommandName, (string name) => { PlayMusic(name); });
-        BindCommand(story, m_musicStopCommandName, (string name) => { StopMusic(name); });
-    }
+        [Header("Audio")]
+        [SerializeField]
+        private StoryAudioCollection m_audioCollection;
 
-    public override void StoryUpdate(string text, IReadOnlyList<string> tags)
-    { }
+        [SerializeField]
+        private string m_soundEffectPlayCommandName = "Audio_SoundEffectPlay";
 
-    public override void StoryEnd(Story story)
-    {
-        base.StoryEnd(story);
-        UnbindCommand(story, m_soundEffectPlayCommandName);
-        UnbindCommand(story, m_musicPlayCommandName);
-        UnbindCommand(story, m_musicStopCommandName);
-    }
+        [SerializeField]
+        private string m_musicPlayCommandName = "Audio_MusicPlay";
 
-    private void PlaySound(string Id)
-    {
-        var sound = m_audioCollection.List.Find(x => x.Id == Id);
-        Debug.Assert(sound != null);
+        [SerializeField]
+        private string m_musicStopCommandName = "Audio_MusicStop";
 
-        AudioManager.Instance?.PlayAudio(sound);
-    }
+        public override void InitModule(StoryManager moduleOwner)
+        {
+            base.InitModule(moduleOwner);
+        }
 
-    private void PlayMusic(string Id)
-    {
-        var music = m_audioCollection.List.Find(x => x.Id == Id);
-        Debug.Assert(music != null);
+        public override void StoryStart(Ink.Runtime.Story story, string knot)
+        {
+            base.StoryStart(story, knot);
+            BindCommand(story, m_soundEffectPlayCommandName, (string name) => { PlaySound(name); });
+            BindCommand(story, m_musicPlayCommandName, (string name) => { PlayMusic(name); });
+            BindCommand(story, m_musicStopCommandName, (string name) => { StopMusic(name); });
+        }
 
-        AudioManager.Instance?.FadeInAndPlayAudio(music);
-    }
+        public override void StoryUpdate(string text, IReadOnlyList<string> tags)
+        { }
 
-    private void StopMusic(string Id)
-    {
-        var music = m_audioCollection.List.Find(x => x.Id == Id);
-        Debug.Assert(music != null);
+        public override void StoryEnd(Ink.Runtime.Story story)
+        {
+            base.StoryEnd(story);
 
-        AudioManager.Instance?.FadeOutAndStopAudio(music);
+            UnbindCommand(story, m_soundEffectPlayCommandName);
+            UnbindCommand(story, m_musicPlayCommandName);
+            UnbindCommand(story, m_musicStopCommandName);
+        }
+
+        private void PlaySound(string Id)
+        {
+            var sound = m_audioCollection.List.Find(x => x.Id == Id);
+            Debug.Assert(sound != null);
+
+            AudioManager.Instance?.PlayAudio(sound);
+        }
+
+        private void PlayMusic(string Id)
+        {
+            var music = m_audioCollection.List.Find(x => x.Id == Id);
+            Debug.Assert(music != null);
+
+            AudioManager.Instance?.FadeInAndPlayAudio(music);
+        }
+
+        private void StopMusic(string Id)
+        {
+            var music = m_audioCollection.List.Find(x => x.Id == Id);
+            Debug.Assert(music != null);
+
+            AudioManager.Instance?.FadeOutAndStopAudio(music);
+        }
     }
 }

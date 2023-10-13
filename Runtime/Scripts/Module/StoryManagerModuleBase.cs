@@ -1,178 +1,279 @@
 using Ink.Runtime;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 
-public abstract class StoryManagerModuleBase : MonoBehaviour
+
+namespace NobunAtelier.Story
 {
-    public StoryManager StoryManager => m_moduleOwner;
-    public bool IsRunning => m_isRunning;
-    public virtual bool ShouldUpdate => true;
 
-    [Header("Story Manager Module")]
-    [SerializeField]
-    private string m_delayCommandName = "Delay";
-
-    [SerializeField]
-    protected bool m_logDebug = false;
-
-    private StoryManager m_moduleOwner;
-    private bool m_isRunning = false;
-
-    private Queue<System.Action> m_commandBuffer = new Queue<System.Action>();
-    private bool m_isPaused = false;
-    private float m_pauseRemainingDuration = 0;
-
-    public virtual bool CanBeExecuted()
+    public abstract class StoryManagerModuleBase : MonoBehaviour
     {
-        return this.isActiveAndEnabled;
-    }
+        public StoryManager StoryManager => m_moduleOwner;
+        public bool IsRunning => m_isRunning;
+        public virtual bool ShouldUpdate => true;
 
-    public virtual void InitModule(StoryManager moduleOwner)
-    {
-        m_moduleOwner = moduleOwner;
-        m_isRunning = false;
-        this.enabled = false;
-    }
+        protected abstract int ChannelCount { get; }
 
-    public virtual void StoryStart(Story story, string knot)
-    {
-        m_isRunning = true;
-        this.enabled = true;
+        [Header("Story Manager Module")]
 
-        BindCommand(story, m_delayCommandName, (float duration) =>
+        [SerializeField]
+        protected bool m_logDebug = false;
+
+        private StoryManager m_moduleOwner;
+        private bool m_isRunning = false;
+
+        private CommandChannel[] m_commandChannels;
+        // private float m_pauseRemainingDuration = 0;
+        // private bool m_isPaused = false;
+        private bool m_needUpdate = false;
+
+        public virtual bool CanBeExecuted()
         {
-            DelayCommand(duration);
-        });
-
-        if (m_logDebug)
-            Debug.Log($"[{this.name}]<{this.GetType().Name}>: StoryStart({knot}).");
-    }
-
-    public virtual void StoryUpdate(string text, IReadOnlyList<string> tags)
-    {
-        if (m_logDebug)
-            Debug.Log($"[{this.name}]<{this.GetType().Name}>: StoryUpdate.");
-    }
-
-    public virtual void StoryEnd(Story story)
-    {
-        m_isRunning = false;
-
-        m_commandBuffer.Clear();
-        story.UnbindExternalFunction(m_delayCommandName);
-
-        if (m_logDebug)
-            Debug.Log($"[{this.name}]<{this.GetType().Name}>: StoryEnd.");
-
-        this.enabled = false;
-    }
-
-    public void AddDelayCommand(float duration)
-    {
-        m_commandBuffer.Enqueue(() => { DelayCommand(duration); });
-    }
-
-    protected virtual void DelayCommand(float duration)
-    {
-        m_pauseRemainingDuration += duration;
-        m_isPaused = true;
-    }
-
-    public virtual void BreakDelay()
-    {
-        m_pauseRemainingDuration = 0;
-        m_isPaused = false;
-    }
-
-    protected void BindCommand(Story story, string commandName, System.Action callback)
-    {
-        story.BindExternalFunction(commandName, () =>
-        {
-            if (m_logDebug)
-            {
-                Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}()' triggered.");
-            }
-
-            m_commandBuffer.Enqueue(() => { callback?.Invoke(); });
-        });
-    }
-
-    protected void UnbindCommand(Story story, string commandName)
-    {
-        story.UnbindExternalFunction(commandName);
-    }
-
-    protected void BindCommand<A>(Story story, string commandName, System.Action<A> callback)
-    {
-        story.BindExternalFunction(commandName, (A arg1) =>
-        {
-            if (m_logDebug)
-            {
-                Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1})' triggered.");
-            }
-
-            m_commandBuffer.Enqueue(() => { callback?.Invoke(arg1); });
-        });
-    }
-
-    protected void BindCommand<A, B>(Story story, string commandName, System.Action<A, B> callback)
-    {
-        story.BindExternalFunction(commandName, (A arg1, B arg2) =>
-        {
-            if (m_logDebug)
-            {
-                Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2})' triggered.");
-            }
-
-            m_commandBuffer.Enqueue(() => { callback?.Invoke(arg1, arg2); });
-        });
-    }
-
-    protected void BindCommand<A,B,C>(Story story, string commandName, System.Action<A, B, C> callback)
-    {
-        story.BindExternalFunction(commandName, (A arg1, B arg2, C arg3) =>
-        {
-            if (m_logDebug)
-            {
-                Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2}, {arg3})' triggered.");
-            }
-
-            m_commandBuffer.Enqueue(() => { callback?.Invoke(arg1, arg2, arg3); });
-        });
-    }
-
-    private void FixedUpdate()
-    {
-        if (!m_isPaused && m_commandBuffer.Count == 0)
-        {
-            return;
+            return this.isActiveAndEnabled;
         }
 
-        if (m_isPaused)
+        public virtual void InitModule(StoryManager moduleOwner)
         {
-            m_pauseRemainingDuration -= Time.fixedDeltaTime;
-            if (m_pauseRemainingDuration <= 0)
+            m_moduleOwner = moduleOwner;
+            m_isRunning = false;
+            this.enabled = false;
+        }
+
+        public virtual void StoryStart(Ink.Runtime.Story story, string knot)
+        {
+            m_isRunning = true;
+            this.enabled = true;
+
+            if (m_logDebug)
+                Debug.Log($"[{this.name}]<{this.GetType().Name}>: StoryStart({knot}).");
+        }
+
+        public virtual void StoryUpdate(string text, IReadOnlyList<string> tags)
+        {
+            if (m_logDebug)
+                Debug.Log($"[{this.name}]<{this.GetType().Name}>: StoryUpdate.");
+        }
+
+        public virtual void StoryEnd(Ink.Runtime.Story story)
+        {
+            m_isRunning = false;
+
+            for (int i = 0, c = m_commandChannels.Length; i < c; i++)
             {
-                m_pauseRemainingDuration = 0;
-                m_isPaused = false;
+                m_commandChannels[i].Commands.Clear();
             }
-            else
+
+            if (m_logDebug)
+                Debug.Log($"[{this.name}]<{this.GetType().Name}>: StoryEnd.");
+
+            this.enabled = false;
+        }
+
+        public void CommandChannelsDelay(float duration)
+        {
+            for (int i = 0, c = m_commandChannels.Length; i < c; ++i)
+            {
+                m_commandChannels[i].Commands.Enqueue(() => { CommandChannelDelay(duration, i); });
+            }
+        }
+
+        public void CommandChannelsBreakDelay()
+        {
+            for (int i = 0, c = m_commandChannels.Length; i < c; ++i)
+            {
+                CommandChannelBreakDelay(i);
+            }
+        }
+
+        public void CommandChannelQueueDelay(float duration, int channel = 0)
+        {
+            Debug.Assert(channel < m_commandChannels.Length);
+            m_commandChannels[channel].Commands.Enqueue(() => { CommandChannelDelay(duration, channel); });
+        }
+
+        protected virtual void CommandChannelDelay(float duration, int channel)
+        {
+            Debug.Assert(channel < m_commandChannels.Length);
+            m_commandChannels[channel].PauseRemainingDuration += duration;
+            m_commandChannels[channel].IsPaused = true;
+            m_needUpdate = true;
+            // m_pauseRemainingDuration += duration;
+            // m_isPaused = true;
+        }
+
+        public virtual void CommandChannelBreakDelay(int channel = 0)
+        {
+            Debug.Assert(channel < m_commandChannels.Length);
+            m_commandChannels[channel].PauseRemainingDuration = 0;
+            m_commandChannels[channel].IsPaused = true;
+            m_needUpdate = true;
+
+            // m_pauseRemainingDuration = 0;
+            // m_isPaused = false;
+        }
+
+        protected void BindCommand(Ink.Runtime.Story story, string commandName, System.Action callback, int channel = 0)
+        {
+            Debug.Assert(channel < m_commandChannels.Length);
+            story.BindExternalFunction(commandName, () =>
+            {
+                if (m_logDebug)
+                {
+                    Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}()' triggered.");
+                }
+                m_needUpdate = true;
+                m_commandChannels[channel].Commands.Enqueue(() => { callback?.Invoke(); });
+            });
+        }
+
+        protected void BindCommand<A>(Ink.Runtime.Story story, string commandName, System.Action<A> callback, int channel = 0)
+        {
+            Debug.Assert(channel < m_commandChannels.Length);
+            story.BindExternalFunction(commandName, (A arg1) =>
+            {
+                if (m_logDebug)
+                {
+                    Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1})' triggered.");
+                }
+                m_needUpdate = true;
+                m_commandChannels[channel].Commands.Enqueue(() => { callback?.Invoke(arg1); });
+            });
+        }
+
+        protected void BindCommand<A, B>(Ink.Runtime.Story story, string commandName, System.Action<A, B> callback, int channel = 0)
+        {
+            Debug.Assert(channel < m_commandChannels.Length);
+            story.BindExternalFunction(commandName, (A arg1, B arg2) =>
+            {
+                if (m_logDebug)
+                {
+                    Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2})' triggered.");
+                }
+                m_needUpdate = true;
+                m_commandChannels[channel].Commands.Enqueue(() => { callback?.Invoke(arg1, arg2); });
+            });
+        }
+
+        protected void BindCommand<A, B, C>(Ink.Runtime.Story story, string commandName, System.Action<A, B, C> callback, int channel = 0)
+        {
+            Debug.Assert(channel < m_commandChannels.Length);
+            story.BindExternalFunction(commandName, (A arg1, B arg2, C arg3) =>
+            {
+                if (m_logDebug)
+                {
+                    Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2}, {arg3})' triggered.");
+                }
+                m_needUpdate = true;
+                m_commandChannels[channel].Commands.Enqueue(() => { callback?.Invoke(arg1, arg2, arg3); });
+            });
+        }
+
+        protected void BindCommand<A, B, C, D>(Ink.Runtime.Story story, string commandName, System.Action<A, B, C, D> callback, int channel = 0)
+        {
+            Debug.Assert(channel < m_commandChannels.Length);
+            story.BindExternalFunction(commandName, (A arg1, B arg2, C arg3, D arg4) =>
+            {
+                if (m_logDebug)
+                {
+                    Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2}, {arg3}, {arg4})' triggered.");
+                }
+                m_needUpdate = true;
+                m_commandChannels[channel].Commands.Enqueue(() => { callback?.Invoke(arg1, arg2, arg3, arg4); });
+            });
+        }
+
+        protected void UnbindCommand(Ink.Runtime.Story story, string commandName)
+        {
+            story.UnbindExternalFunction(commandName);
+        }
+
+        private void Awake()
+        {
+            m_commandChannels = new CommandChannel[ChannelCount];
+
+            for (int i = 0, c = m_commandChannels.Length; i < c; ++i)
+            {
+                m_commandChannels[i].Commands = new Queue<Action>();
+            }
+        }
+
+        private void FixedUpdate()
+        {
+            if (/*!m_isPaused && */!m_needUpdate) //  m_commandBuffers.Count == 0
             {
                 return;
             }
+
+            //if (m_isPaused)
+            //{
+            //    m_pauseRemainingDuration -= Time.fixedDeltaTime;
+            //    if (m_pauseRemainingDuration <= 0)
+            //    {
+            //        m_pauseRemainingDuration = 0;
+            //        m_isPaused = false;
+            //    }
+            //    else
+            //    {
+            //        return;
+            //    }
+            //}
+
+            // Reset the dirty status and if anything prevent all the remaining command to be executed, dirty again.
+            m_needUpdate = false;
+            for (int i = 0, c = m_commandChannels.Length; i < c; ++i)
+            {
+                if (m_commandChannels[i].IsPaused)
+                {
+                    m_commandChannels[i].PauseRemainingDuration -= Time.fixedDeltaTime;
+                    if (m_commandChannels[i].PauseRemainingDuration <= 0)
+                    {
+                        m_commandChannels[i].PauseRemainingDuration = 0;
+                        m_commandChannels[i].IsPaused = false;
+                    }
+                    else
+                    {
+                        m_needUpdate = true;
+                        continue;
+                    }
+                }
+
+                if (m_commandChannels[i].Commands.Count > 0)
+                {
+                    for (int j = 0; j < m_commandChannels[i].Commands.Count; j++)
+                    {
+                        m_commandChannels[i].Commands.Dequeue()?.Invoke();
+                        // if a Delay is call, we stop the dequeue here.
+                        if (m_commandChannels[i].IsPaused)
+                        {
+                            m_needUpdate = true;
+                            continue;
+                        }
+                    }
+                }
+
+                // if (m_commandChannels.Count > 0)
+                // {
+                //     for (int i = 0; i < m_commandChannels.Count; i++)
+                //     {
+                //         m_commandChannels.Dequeue()?.Invoke();
+                //         // if a Delay is call, we stop the dequeue here.
+                //         if (m_isPaused)
+                //         {
+                //             return;
+                //         }
+                //     }
+                // }
+            }
         }
 
-        if (m_commandBuffer.Count > 0)
+        private struct CommandChannel
         {
-            for (int i = 0; i < m_commandBuffer.Count; i++)
-            {
-                m_commandBuffer.Dequeue()?.Invoke();
-                // if a Delay is call, we stop the dequeue here.
-                if (m_isPaused)
-                {
-                    return;
-                }
-            }
+            public Queue<System.Action> Commands;
+            public float PauseRemainingDuration;
+            public bool IsPaused;
         }
     }
 }
