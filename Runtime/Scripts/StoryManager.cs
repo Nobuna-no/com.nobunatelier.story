@@ -69,6 +69,7 @@ namespace NobunAtelier.Story
 
             for (int i = 0; i < m_modules.Length; i++)
             {
+                Debug.Assert(m_modules[i]);
                 m_modules[i].InitModule(this);
             }
         }

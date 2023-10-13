@@ -76,7 +76,8 @@ namespace NobunAtelier.Story
         {
             for (int i = 0, c = m_commandChannels.Length; i < c; ++i)
             {
-                m_commandChannels[i].Commands.Enqueue(() => { CommandChannelDelay(duration, i); });
+                int channel = i;
+                m_commandChannels[i].Commands.Enqueue(() => { CommandChannelDelay(duration, channel); });
             }
         }
 
