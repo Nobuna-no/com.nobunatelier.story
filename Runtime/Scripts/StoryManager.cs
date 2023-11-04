@@ -101,7 +101,7 @@ namespace NobunAtelier.Story
                 {
                     if (module.IsRunning)
                     {
-                        module.CommandChannelsDelay(duration);
+                        module.CommandChannelsQueueDelay(duration);
                     }
                 }
             });

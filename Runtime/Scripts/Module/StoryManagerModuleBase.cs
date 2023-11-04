@@ -67,12 +67,25 @@ namespace NobunAtelier.Story
             this.enabled = false;
         }
 
-        public void CommandChannelsDelay(float duration)
+        public void CommandChannelQueueDelay(float duration, int channel = 0)
+        {
+            Debug.Assert(channel < m_commandChannels.Length);
+            m_commandChannels[channel].Commands.Enqueue(() => { CommandChannelDelay(duration, channel); });
+        }
+
+        public void CommandChannelsQueueDelay(float duration)
         {
             for (int i = 0, c = m_commandChannels.Length; i < c; ++i)
             {
                 int channel = i;
-                m_commandChannels[i].Commands.Enqueue(() => { CommandChannelDelay(duration, channel); });
+                m_commandChannels[i].Commands.Enqueue(() =>
+                {
+                    if (m_logDebug)
+                    {
+                        Debug.Log($"[{this.name}]<{this.GetType().Name}>: CommandChannelsQueueDelay({duration}) triggered.");
+                    }
+                    CommandChannelDelay(duration, channel);
+                });
             }
         }
 
@@ -82,12 +95,6 @@ namespace NobunAtelier.Story
             {
                 CommandChannelBreakDelay(i);
             }
-        }
-
-        public void CommandChannelQueueDelay(float duration, int channel = 0)
-        {
-            Debug.Assert(channel < m_commandChannels.Length);
-            m_commandChannels[channel].Commands.Enqueue(() => { CommandChannelDelay(duration, channel); });
         }
 
         protected virtual void CommandChannelDelay(float duration, int channel)
@@ -171,6 +178,7 @@ namespace NobunAtelier.Story
             });
         }
 
+        // Maximum is 4 arguments
         protected void BindCommand<A, B, C, D>(Ink.Runtime.Story story, string commandName, System.Action<A, B, C, D> callback, int channel = 0)
         {
             Debug.Assert(channel < m_commandChannels.Length);
@@ -205,24 +213,10 @@ namespace NobunAtelier.Story
 
         private void FixedUpdate()
         {
-            if (/*!m_isPaused && */!m_needUpdate) //  m_commandBuffers.Count == 0
+            if (!m_needUpdate)
             {
                 return;
             }
-
-            //if (m_isPaused)
-            //{
-            //    m_pauseRemainingDuration -= Time.fixedDeltaTime;
-            //    if (m_pauseRemainingDuration <= 0)
-            //    {
-            //        m_pauseRemainingDuration = 0;
-            //        m_isPaused = false;
-            //    }
-            //    else
-            //    {
-            //        return;
-            //    }
-            //}
 
             // Reset the dirty status and if anything prevent all the remaining command to be executed, dirty again.
             m_needUpdate = false;
@@ -258,19 +252,6 @@ namespace NobunAtelier.Story
                         break;
                     }
                 }
-
-                // if (m_commandChannels.Count > 0)
-                // {
-                //     for (int i = 0; i < m_commandChannels.Count; i++)
-                //     {
-                //         m_commandChannels.Dequeue()?.Invoke();
-                //         // if a Delay is call, we stop the dequeue here.
-                //         if (m_isPaused)
-                //         {
-                //             return;
-                //         }
-                //     }
-                // }
             }
         }
 
