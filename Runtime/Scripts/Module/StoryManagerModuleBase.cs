@@ -1,14 +1,9 @@
-using Ink.Runtime;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
-
 
 namespace NobunAtelier.Story
 {
-
     public abstract class StoryManagerModuleBase : MonoBehaviour
     {
         public StoryManager StoryManager => m_moduleOwner;
@@ -18,7 +13,6 @@ namespace NobunAtelier.Story
         protected abstract int ChannelCount { get; }
 
         [Header("Story Manager Module")]
-
         [SerializeField]
         protected bool m_logDebug = false;
 
@@ -26,6 +20,7 @@ namespace NobunAtelier.Story
         private bool m_isRunning = false;
 
         private CommandChannel[] m_commandChannels;
+
         // private float m_pauseRemainingDuration = 0;
         // private bool m_isPaused = false;
         private bool m_needUpdate = false;
@@ -101,8 +96,6 @@ namespace NobunAtelier.Story
             m_commandChannels[channel].PauseRemainingDuration += duration;
             m_commandChannels[channel].IsPaused = true;
             m_needUpdate = true;
-            // m_pauseRemainingDuration += duration;
-            // m_isPaused = true;
         }
 
         public virtual void CommandChannelBreakDelay(int channel = 0)
@@ -111,9 +104,6 @@ namespace NobunAtelier.Story
             m_commandChannels[channel].PauseRemainingDuration = 0;
             m_commandChannels[channel].IsPaused = true;
             m_needUpdate = true;
-
-            // m_pauseRemainingDuration = 0;
-            // m_isPaused = false;
         }
 
         protected void BindCommand(Ink.Runtime.Story story, string commandName, System.Action callback, int channel = 0)
@@ -135,12 +125,15 @@ namespace NobunAtelier.Story
             Debug.Assert(channel < m_commandChannels.Length);
             story.BindExternalFunction(commandName, (A arg1) =>
             {
-                if (m_logDebug)
-                {
-                    Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1})' triggered.");
-                }
                 m_needUpdate = true;
-                m_commandChannels[channel].Commands.Enqueue(() => { callback?.Invoke(arg1); });
+                m_commandChannels[channel].Commands.Enqueue(() =>
+                {
+                    if (m_logDebug)
+                    {
+                        Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1})' triggered.");
+                    }
+                    callback?.Invoke(arg1);
+                });
             });
         }
 
@@ -149,12 +142,15 @@ namespace NobunAtelier.Story
             Debug.Assert(channel < m_commandChannels.Length);
             story.BindExternalFunction(commandName, (A arg1, B arg2) =>
             {
-                if (m_logDebug)
-                {
-                    Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2})' triggered.");
-                }
                 m_needUpdate = true;
-                m_commandChannels[channel].Commands.Enqueue(() => { callback?.Invoke(arg1, arg2); });
+                m_commandChannels[channel].Commands.Enqueue(() =>
+                {
+                    if (m_logDebug)
+                    {
+                        Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2})' triggered.");
+                    }
+                    callback?.Invoke(arg1, arg2);
+                });
             });
         }
 
@@ -163,12 +159,15 @@ namespace NobunAtelier.Story
             Debug.Assert(channel < m_commandChannels.Length);
             story.BindExternalFunction(commandName, (A arg1, B arg2, C arg3) =>
             {
-                if (m_logDebug)
-                {
-                    Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2}, {arg3})' triggered.");
-                }
                 m_needUpdate = true;
-                m_commandChannels[channel].Commands.Enqueue(() => { callback?.Invoke(arg1, arg2, arg3); });
+                m_commandChannels[channel].Commands.Enqueue(() =>
+                {
+                    if (m_logDebug)
+                    {
+                        Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2}, {arg3})' triggered.");
+                    }
+                    callback?.Invoke(arg1, arg2, arg3);
+                });
             });
         }
 
@@ -177,12 +176,15 @@ namespace NobunAtelier.Story
             Debug.Assert(channel < m_commandChannels.Length);
             story.BindExternalFunction(commandName, (A arg1, B arg2, C arg3, D arg4) =>
             {
-                if (m_logDebug)
-                {
-                    Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2}, {arg3}, {arg4})' triggered.");
-                }
                 m_needUpdate = true;
-                m_commandChannels[channel].Commands.Enqueue(() => { callback?.Invoke(arg1, arg2, arg3, arg4); });
+                m_commandChannels[channel].Commands.Enqueue(() =>
+                {
+                    if (m_logDebug)
+                    {
+                        Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2}, {arg3}, {arg4})' triggered.");
+                    }
+                    callback?.Invoke(arg1, arg2, arg3, arg4);
+                });
             });
         }
 
@@ -241,17 +243,19 @@ namespace NobunAtelier.Story
                     }
                 }
 
-                if (m_commandChannels[i].Commands.Count > 0)
+                if (m_commandChannels[i].Commands.Count == 0)
                 {
-                    for (int j = 0; j < m_commandChannels[i].Commands.Count; j++)
+                    continue;
+                }
+
+                for (int j = 0; j < m_commandChannels[i].Commands.Count; j++)
+                {
+                    m_commandChannels[i].Commands.Dequeue()?.Invoke();
+                    // if a Delay is call, we stop the dequeue here.
+                    if (m_commandChannels[i].IsPaused)
                     {
-                        m_commandChannels[i].Commands.Dequeue()?.Invoke();
-                        // if a Delay is call, we stop the dequeue here.
-                        if (m_commandChannels[i].IsPaused)
-                        {
-                            m_needUpdate = true;
-                            continue;
-                        }
+                        m_needUpdate = true;
+                        break;
                     }
                 }
 
