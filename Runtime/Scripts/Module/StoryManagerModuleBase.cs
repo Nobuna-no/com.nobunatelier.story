@@ -120,7 +120,7 @@ namespace NobunAtelier.Story
             {
                 if (m_logDebug)
                 {
-                    Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}()' triggered.");
+                    Debug.Log($"[{Time.frameCount}][{this.name}]<{this.GetType().Name}>: '{commandName}()' triggered.");
                 }
                 m_needUpdate = true;
                 m_commandChannels[channel].Commands.Enqueue(() => { callback?.Invoke(); });
@@ -137,7 +137,7 @@ namespace NobunAtelier.Story
                 {
                     if (m_logDebug)
                     {
-                        Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1})' triggered.");
+                        Debug.Log($"[{Time.frameCount}][{this.name}]<{this.GetType().Name}>: '{commandName}({arg1})' triggered.");
                     }
                     callback?.Invoke(arg1);
                 });
@@ -154,7 +154,7 @@ namespace NobunAtelier.Story
                 {
                     if (m_logDebug)
                     {
-                        Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2})' triggered.");
+                        Debug.Log($"[{Time.frameCount}][{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2})' triggered.");
                     }
                     callback?.Invoke(arg1, arg2);
                 });
@@ -171,7 +171,7 @@ namespace NobunAtelier.Story
                 {
                     if (m_logDebug)
                     {
-                        Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2}, {arg3})' triggered.");
+                        Debug.Log($"[{Time.frameCount}][{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2}, {arg3})' triggered.");
                     }
                     callback?.Invoke(arg1, arg2, arg3);
                 });
@@ -189,7 +189,7 @@ namespace NobunAtelier.Story
                 {
                     if (m_logDebug)
                     {
-                        Debug.Log($"[{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2}, {arg3}, {arg4})' triggered.");
+                        Debug.Log($"[{Time.frameCount}][{this.name}]<{this.GetType().Name}>: '{commandName}({arg1}, {arg2}, {arg3}, {arg4})' triggered.");
                     }
                     callback?.Invoke(arg1, arg2, arg3, arg4);
                 });
