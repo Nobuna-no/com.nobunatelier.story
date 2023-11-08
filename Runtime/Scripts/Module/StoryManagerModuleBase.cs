@@ -70,7 +70,15 @@ namespace NobunAtelier.Story
         public void CommandChannelQueueDelay(float duration, int channel = 0)
         {
             Debug.Assert(channel < m_commandChannels.Length);
-            m_commandChannels[channel].Commands.Enqueue(() => { CommandChannelDelay(duration, channel); });
+            m_commandChannels[channel].Commands.Enqueue(() =>
+            {
+                if (m_logDebug)
+                {
+                    Debug.Log($"[{this.name}]<{this.GetType().Name}>: CommandChannelsQueueDelay({duration}) triggered.");
+                }
+                CommandChannelDelay(duration, channel);
+            });
+            m_needUpdate = true;
         }
 
         public void CommandChannelsQueueDelay(float duration)
@@ -87,6 +95,7 @@ namespace NobunAtelier.Story
                     CommandChannelDelay(duration, channel);
                 });
             }
+            m_needUpdate = true;
         }
 
         public void CommandChannelsBreakDelay()
@@ -109,7 +118,7 @@ namespace NobunAtelier.Story
         {
             Debug.Assert(channel < m_commandChannels.Length);
             m_commandChannels[channel].PauseRemainingDuration = 0;
-            m_commandChannels[channel].IsPaused = true;
+            m_commandChannels[channel].IsPaused = false;
             m_needUpdate = true;
         }
 
