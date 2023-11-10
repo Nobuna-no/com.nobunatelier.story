@@ -20,17 +20,11 @@ namespace NobunAtelier.Story
         public override bool ShouldUpdate => false;
 
         [Header("Audio")]
-        [SerializeField]
-        private StoryAudioCollection m_audioCollection;
-
-        [SerializeField]
-        private string m_soundEffectPlayCommandName = "Audio_SoundEffectPlay";
-
-        [SerializeField]
-        private string m_musicPlayCommandName = "Audio_MusicPlay";
-
-        [SerializeField]
-        private string m_musicStopCommandName = "Audio_MusicStop";
+        [SerializeField] private StoryAudioCollection m_audioCollection;
+        [SerializeField] private string m_soundEffectPlayCommandName = "sound_play";
+        [SerializeField] private string m_musicPlayCommandName = "music_play";
+        [SerializeField] private string m_musicStopCommandName = "music_stop";
+        [SerializeField] private bool m_fadeOutAllSoundOnStart = true;
 
         public override void InitModule(StoryManager moduleOwner)
         {
@@ -43,6 +37,11 @@ namespace NobunAtelier.Story
             BindCommand(story, m_soundEffectPlayCommandName, (string name) => { PlaySound(name); });
             BindCommand(story, m_musicPlayCommandName, (string name) => { PlayMusic(name); });
             BindCommand(story, m_musicStopCommandName, (string name) => { StopMusic(name); });
+
+            if (m_fadeOutAllSoundOnStart && AudioManager.Instance)
+            {
+                AudioManager.Instance.FadeOutAndStopAllAudioResources();
+            }
         }
 
         public override void StoryUpdate(string text, IReadOnlyList<string> tags)
