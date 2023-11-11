@@ -21,8 +21,6 @@ namespace NobunAtelier.Story
 
         private CommandChannel[] m_commandChannels;
 
-        // private float m_pauseRemainingDuration = 0;
-        // private bool m_isPaused = false;
         private bool m_needUpdate = false;
 
         public virtual bool CanBeExecuted()
@@ -40,7 +38,15 @@ namespace NobunAtelier.Story
         public virtual void StoryStart(Ink.Runtime.Story story, string knot)
         {
             m_isRunning = true;
+            m_needUpdate = false;
             this.enabled = true;
+
+            foreach (var channel in m_commandChannels)
+            {
+                channel.Commands.Clear();
+                channel.PauseRemainingDuration = 0;
+                channel.IsPaused = false;
+            }
 
             if (m_logDebug)
                 Debug.Log($"[{this.name}]<{this.GetType().Name}>: StoryStart({knot}).");
@@ -216,7 +222,10 @@ namespace NobunAtelier.Story
 
             for (int i = 0, c = m_commandChannels.Length; i < c; ++i)
             {
-                m_commandChannels[i].Commands = new Queue<Action>();
+                m_commandChannels[i] = new CommandChannel()
+                {
+                    Commands = new Queue<Action>()
+                };
             }
         }
 
@@ -264,7 +273,7 @@ namespace NobunAtelier.Story
             }
         }
 
-        private struct CommandChannel
+        private class CommandChannel
         {
             public Queue<System.Action> Commands;
             public float PauseRemainingDuration;
