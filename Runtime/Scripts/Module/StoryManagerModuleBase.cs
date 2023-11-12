@@ -260,7 +260,7 @@ namespace NobunAtelier.Story
                     continue;
                 }
 
-                for (int j = 0; j < m_commandChannels[i].Commands.Count; j++)
+                for (int j = 0, d = m_commandChannels[i].Commands.Count; j < d; j++)
                 {
                     m_commandChannels[i].Commands.Dequeue()?.Invoke();
                     // if a Delay is call, we stop the dequeue here.
