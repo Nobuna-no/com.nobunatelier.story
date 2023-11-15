@@ -6,7 +6,7 @@ namespace NobunAtelier.Story
 {
     public abstract class StoryManagerModuleBase : MonoBehaviour
     {
-        public StoryManager StoryManager => m_moduleOwner;
+        public StoryDirector StoryManager => m_moduleOwner;
         public bool IsRunning => m_isRunning;
         public virtual bool ShouldUpdate => true;
 
@@ -16,7 +16,7 @@ namespace NobunAtelier.Story
         [SerializeField]
         protected bool m_logDebug = false;
 
-        private StoryManager m_moduleOwner;
+        private StoryDirector m_moduleOwner;
         private bool m_isRunning = false;
 
         private CommandChannel[] m_commandChannels;
@@ -28,7 +28,7 @@ namespace NobunAtelier.Story
             return this.isActiveAndEnabled;
         }
 
-        public virtual void InitModule(StoryManager moduleOwner)
+        public virtual void InitModule(StoryDirector moduleOwner)
         {
             m_moduleOwner = moduleOwner;
             m_isRunning = false;

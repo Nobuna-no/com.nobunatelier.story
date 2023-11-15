@@ -2,14 +2,9 @@
 using System.Collections;
 using UnityEngine;
 
-/// <summary>
-/// EXTERNAL System_StoryPlay(nodeName)
-/// EXTERNAL System_DelayCommands(duration)
-/// </summary>
-
 namespace NobunAtelier.Story
 {
-    public class StoryManager : SingletonManager<StoryManager>
+    public class StoryDirector : SingletonManager<StoryDirector>
     {
         private const string storyStateName = "StoryState";
 
@@ -20,12 +15,12 @@ namespace NobunAtelier.Story
         public float DefaultStoryStartFadeOutDuration => m_storyFadeDuration;
         public bool AutoStoryFade => m_autoStoryFade;
 
-        [Header("Story Manager")]
+        [Header("Story Director")]
         [SerializeField] private TextAsset inkAsset;
         [SerializeField] private StoryManagerModuleBase[] m_modules;
 
         // This settings can probably be move to a data asset.
-        [Header("Story Manager - Settings")]
+        [Header("Story Director - Settings")]
         [SerializeField] private string m_globalWaitCommandName = "wait";
         [Tooltip("Should each story be started with a fade out and end with a fade in? Can be override on StoryGameModeState.")]
         [SerializeField] private bool m_autoStoryFade = true;
@@ -34,22 +29,20 @@ namespace NobunAtelier.Story
         [Tooltip("Set to false in case you want to manually handle the display of the first line of a node.")]
         [SerializeField] private bool m_displayFirstLineOnStoryStart = true;
 
-        [Header("Story Manager - Debug")]
-        [SerializeField] private string m_debugStory = "1a";
-
         private Ink.Runtime.Story m_inkStory;
         private string m_knotInProgress;
         private bool m_isStoryTelling = false;
         private bool m_skipEnabled = false;
 
 #if UNITY_EDITOR
-#endif
-
+        [Header("Story Director - Debug")]
+        [SerializeField] private string m_debugStory = "1a";
         [Button(enabledMode: EButtonEnableMode.Playmode)]
         public void Debug_StartStory()
         {
             StartStory(m_debugStory);
         }
+#endif
 
         public void DisplayNextLine()
         {
@@ -175,7 +168,7 @@ namespace NobunAtelier.Story
             }
         }
 
-        protected override StoryManager GetInstance()
+        protected override StoryDirector GetInstance()
         {
             return this;
         }

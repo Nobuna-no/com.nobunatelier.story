@@ -26,7 +26,7 @@ namespace NobunAtelier.Story
         [SerializeField] private string m_musicStopCommandName = "music_stop";
         [SerializeField] private bool m_fadeOutAllSoundOnStart = true;
 
-        public override void InitModule(StoryManager moduleOwner)
+        public override void InitModule(StoryDirector moduleOwner)
         {
             base.InitModule(moduleOwner);
         }

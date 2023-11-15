@@ -33,7 +33,7 @@ namespace NobunAtelier.Story
         {
             base.Enter();
 
-            if (!StoryManager.Instance)
+            if (!StoryDirector.Instance)
             {
                 Debug.LogWarning("Trying to play story but no StoryManager available...");
                 return;
@@ -50,9 +50,9 @@ namespace NobunAtelier.Story
                         storyScheduled = true;
                     }
                 }
-                else if (StoryManager.Instance.AutoStoryFade)
+                else if (StoryDirector.Instance.AutoStoryFade)
                 {
-                    ScreenFader.Instance.FadeOut(StoryManager.Instance.DefaultStoryStartFadeOutDuration, StartStory);
+                    ScreenFader.Instance.FadeOut(StoryDirector.Instance.DefaultStoryStartFadeOutDuration, StartStory);
                     storyScheduled = true;
                 }
             }
@@ -65,15 +65,15 @@ namespace NobunAtelier.Story
 
         private void StartStory()
         {
-            if (StoryManager.Instance.StartStory(m_storyKnotToPlay))
+            if (StoryDirector.Instance.StartStory(m_storyKnotToPlay))
             {
-                StoryManager.Instance.OnStoryEnded += Instance_OnStoryEnded;
+                StoryDirector.Instance.OnStoryEnded += Instance_OnStoryEnded;
             }
         }
 
         private void Instance_OnStoryEnded()
         {
-            StoryManager.Instance.OnStoryEnded -= Instance_OnStoryEnded;
+            StoryDirector.Instance.OnStoryEnded -= Instance_OnStoryEnded;
 
             m_OnStoryFinished?.Invoke();
 
@@ -86,9 +86,9 @@ namespace NobunAtelier.Story
                         ScreenFader.Instance.FadeIn(m_fadeDuration, SetNextStateAfterFade);
                     }
                 }
-                else if (StoryManager.Instance.AutoStoryFade)
+                else if (StoryDirector.Instance.AutoStoryFade)
                 {
-                    ScreenFader.Instance.FadeIn(StoryManager.Instance.DefaultStoryStartFadeOutDuration, SetNextStateAfterFade);
+                    ScreenFader.Instance.FadeIn(StoryDirector.Instance.DefaultStoryStartFadeOutDuration, SetNextStateAfterFade);
                 }
             }
             else
