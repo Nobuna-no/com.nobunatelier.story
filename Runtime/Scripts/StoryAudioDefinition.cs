@@ -1,11 +1,13 @@
 using UnityEngine;
-using NobunAtelier;
 
-public class StoryAudioDefinition : AudioDefinition
+namespace NobunAtelier.Story
 {
-    public string Id => m_id;
+    public class StoryAudioDefinition : AudioDefinition
+    {
+        public string Id => m_id;
 
-    [Header("Story")]
-    [SerializeField]
-    private string m_id;
+        [Header("Story")]
+        [SerializeField]
+        private string m_id;
+    }
 }
