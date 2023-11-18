@@ -27,29 +27,27 @@ namespace NobunAtelier.Story
 
             BindCommand(story, m_screenFadeEnterCommandName, (float duration) =>
             {
-                Debug.Log($"[{Time.frameCount}][{this.name}]<{this.GetType().Name}>: on {m_screenFadeEnterCommandName}.");
                 if (duration == 0)
                 {
-                    ScreenFader.Instance.Fill();
+                    ScreenFader.Fill();
                 }
                 else
                 {
                     CommandChannelQueueDelay(duration);
-                    ScreenFader.Instance.FadeIn(duration, CommandChannelsBreakDelay);
+                    ScreenFader.FadeIn(duration, CommandChannelsBreakDelay);
                 }
             });
 
             BindCommand(story, m_screenFadeExitCommandName, (float duration) =>
             {
-                Debug.Log($"[{Time.frameCount}][{this.name}]<{this.GetType().Name}>: on {m_screenFadeExitCommandName}.");
                 if (duration == 0)
                 {
-                    ScreenFader.Instance.Clear();
+                    ScreenFader.Clear();
                 }
                 else
                 {
                     CommandChannelQueueDelay(duration);
-                    ScreenFader.Instance.FadeOut(duration, CommandChannelsBreakDelay);
+                    ScreenFader.FadeOut(duration, CommandChannelsBreakDelay);
                 }
             });
         }

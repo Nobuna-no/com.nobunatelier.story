@@ -40,19 +40,19 @@ namespace NobunAtelier.Story
             }
 
             bool storyScheduled = false;
-            if (ScreenFader.Instance && ScreenFader.Instance.IsFadeIn)
+            if (ScreenFader.IsInstanceValid() && ScreenFader.IsFadeIn())
             {
                 if (m_overrideGlobalFadeSettings)
                 {
                     if (m_fadeOnStoryStart)
                     {
-                        ScreenFader.Instance.FadeOut(m_fadeDuration, StartStory);
+                        ScreenFader.FadeOut(m_fadeDuration, StartStory);
                         storyScheduled = true;
                     }
                 }
                 else if (StoryDirector.Instance.AutoStoryFade)
                 {
-                    ScreenFader.Instance.FadeOut(StoryDirector.Instance.DefaultStoryStartFadeOutDuration, StartStory);
+                    ScreenFader.FadeOut(StoryDirector.Instance.DefaultStoryStartFadeOutDuration, StartStory);
                     storyScheduled = true;
                 }
             }
@@ -77,18 +77,18 @@ namespace NobunAtelier.Story
 
             m_OnStoryFinished?.Invoke();
 
-            if (ScreenFader.Instance && !ScreenFader.Instance.IsFadeIn)
+            if (ScreenFader.IsInstanceValid() && ScreenFader.IsFadeIn())
             {
                 if (m_overrideGlobalFadeSettings)
                 {
                     if (m_fadeOnStoryEnd)
                     {
-                        ScreenFader.Instance.FadeIn(m_fadeDuration, SetNextStateAfterFade);
+                        ScreenFader.FadeIn(m_fadeDuration, SetNextStateAfterFade);
                     }
                 }
                 else if (StoryDirector.Instance.AutoStoryFade)
                 {
-                    ScreenFader.Instance.FadeIn(StoryDirector.Instance.DefaultStoryStartFadeOutDuration, SetNextStateAfterFade);
+                    ScreenFader.FadeIn(StoryDirector.Instance.DefaultStoryStartFadeOutDuration, SetNextStateAfterFade);
                 }
             }
             else
