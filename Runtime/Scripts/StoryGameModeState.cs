@@ -39,32 +39,21 @@ namespace NobunAtelier.Story
                 return;
             }
 
-            bool storyScheduled = false;
             if (ScreenFader.IsInstanceValid() && ScreenFader.IsFadeIn())
             {
                 if (m_overrideGlobalFadeSettings)
                 {
                     if (m_fadeOnStoryStart)
                     {
-                        ScreenFader.FadeOut(m_fadeDuration, StartStory);
-                        storyScheduled = true;
+                        ScreenFader.FadeOut(m_fadeDuration);
                     }
                 }
                 else if (StoryDirector.Instance.AutoStoryFade)
                 {
-                    ScreenFader.FadeOut(StoryDirector.Instance.DefaultStoryStartFadeOutDuration, StartStory);
-                    storyScheduled = true;
+                    ScreenFader.FadeOut(StoryDirector.Instance.DefaultStoryStartFadeOutDuration);
                 }
             }
 
-            if (!storyScheduled)
-            {
-                StartStory();
-            }
-        }
-
-        private void StartStory()
-        {
             if (StoryDirector.Instance.StartStory(m_storyKnotToPlay))
             {
                 StoryDirector.Instance.OnStoryEnded += Instance_OnStoryEnded;
