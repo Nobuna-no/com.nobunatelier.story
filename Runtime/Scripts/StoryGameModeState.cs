@@ -39,7 +39,7 @@ namespace NobunAtelier.Story
                 return;
             }
 
-            if (ScreenFader.IsInstanceValid() && ScreenFader.IsFadeIn())
+            if (ScreenFader.IsSingletonValid && ScreenFader.IsFadeIn())
             {
                 if (m_overrideGlobalFadeSettings)
                 {
@@ -66,7 +66,7 @@ namespace NobunAtelier.Story
 
             m_OnStoryFinished?.Invoke();
 
-            if (ScreenFader.IsInstanceValid() && ScreenFader.IsFadeIn())
+            if (ScreenFader.IsSingletonValid && ScreenFader.IsFadeIn())
             {
                 if (m_overrideGlobalFadeSettings)
                 {

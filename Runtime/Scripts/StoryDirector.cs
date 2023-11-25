@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace NobunAtelier.Story
 {
-    public class StoryDirector : SingletonManager<StoryDirector>
+    public class StoryDirector : Singleton<StoryDirector>
     {
         private const string storyStateName = "StoryState";
 
@@ -145,10 +145,8 @@ namespace NobunAtelier.Story
             return true;
         }
 
-        protected override void Awake()
+        protected override void OnSingletonAwake()
         {
-            base.Awake();
-
             m_inkStory = new Ink.Runtime.Story(inkAsset.text);
             m_inkStory.allowExternalFunctionFallbacks = true;
             m_inkStory.onError += (msg, type) =>
@@ -166,11 +164,6 @@ namespace NobunAtelier.Story
                 Debug.Assert(m_modules[i]);
                 m_modules[i].InitModule(this);
             }
-        }
-
-        protected override StoryDirector GetInstance()
-        {
-            return this;
         }
 
         private void BindCommand<A>(string commandName, System.Action<A> callback)
